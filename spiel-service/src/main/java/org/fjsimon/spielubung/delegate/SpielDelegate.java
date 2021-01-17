@@ -7,6 +7,8 @@ import org.fjsimon.spielubung.model.SpielMessage;
 import org.fjsimon.spielubung.model.Spielzug;
 import org.fjsimon.spielubung.model.Spieler;
 import org.fjsimon.spielubung.expections.ApplicationException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import static java.util.Optional.ofNullable;
@@ -25,36 +27,39 @@ public class SpielDelegate {
         spielerRepository.save(spieler);
     }
 
-
+    @Retryable(value = RuntimeException.class,
+            maxAttemptsExpression = "${retry.maxAttempts}",
+            backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
     public void remove(String spielerName) {
 
         spielerRepository.findByName(spielerName)
-                .ifPresent(player -> {
-                    spielerRepository.delete(player);
-                    ofNullable(player.getGegenspieler())
-                            .ifPresent(p -> {
-                                p.setAvailable(true);
-                                p.setGegenspieler(null);
-                                spielerRepository.save(p);
-                                meldungService.notifyPlayer(p.getName(),
-                                        aTrennenMessage(p.getGegenspieler().getName()));
-                            });
+            .ifPresent(player -> {
 
-                });
+                spielerRepository.delete(player);
+                ofNullable(player.getGegenspieler())
+                    .ifPresent(p -> {
+                        meldungService.notifyPlayer(p.getName(),
+                            aTrennenMessage(p.getGegenspieler().getName()));
+                        p.setAvailable(true);
+                        p.setGegenspieler(null);
+                        spielerRepository.save(p);
+                    });
+
+            });
     }
 
     public SpielMessage start(String spielerName) {
 
         return spielerRepository.findByName(spielerName)
-                .map(this::processStartRequestForPlayer)
-                .orElseThrow(() -> new ApplicationException(String
-                        .format("Player not found: %s", spielerName)));
+            .map(this::processStartRequestForPlayer)
+            .orElseThrow(() -> new ApplicationException(String
+                .format("Player not found: %s", spielerName)));
     }
 
     public void number(int randomNumber, String spielerName) {
 
         Spieler spieler = spielerRepository.findByName(spielerName)
-                .orElseThrow(() ->  new ApplicationException(String.format("Player not found: %s", spielerName)));
+            .orElseThrow(() ->  new ApplicationException(String.format("Player not found: %s", spielerName)));
 
         checkPlayerHasOpponent(spieler);
         meldungService.notifyPlayer(spieler.getGegenspieler().getName(), aSpielenMessage(randomNumber));
@@ -68,7 +73,7 @@ public class SpielDelegate {
         checkDivisibleByDivisor(addition);
 
         Spieler spieler =spielerRepository.findByName(spielerName)
-                .orElseThrow(() -> new ApplicationException(String.format("Player not found: %s", spielerName)));
+            .orElseThrow(() -> new ApplicationException(String.format("Player not found: %s", spielerName)));
 
         checkPlayerHasOpponent(spieler);
         int newValue = addition / 3;
@@ -86,12 +91,12 @@ public class SpielDelegate {
     private SpielMessage processStartRequestForPlayer(Spieler spieler) {
 
         return ofNullable(spieler.getGegenspieler())
-                .map(this::rematchWithOpponent)
-                .orElseGet(() -> pairPlayerWithAvailablePlayer(spieler)
-                        .orElseGet(SpielMessageFactory::aWartenMessage));
+            .map(this::rematchWithGegenspieler)
+            .orElseGet(() -> pairPlayerWithAvailablePlayer(spieler)
+                .orElseGet(SpielMessageFactory::aWartenMessage));
     }
 
-    private SpielMessage rematchWithOpponent(Spieler spieler) {
+    private SpielMessage rematchWithGegenspieler(Spieler spieler) {
 
         meldungService.notifyPlayer(spieler.getName(), aStartenMessage(spieler));
         return aStartenMessage(spieler.getGegenspieler());
@@ -100,22 +105,22 @@ public class SpielDelegate {
     private Optional<SpielMessage> pairPlayerWithAvailablePlayer(Spieler spieler) {
 
         return spielerRepository.findByNameNotAndGegenspielerIsNull(spieler.getName())
-                .map(availablePlayer -> {
+            .map(availablePlayer -> {
 
-                    availablePlayer.setPrimary(true);
-                    spieler.setPrimary(false);
+                availablePlayer.setPrimary(true);
+                spieler.setPrimary(false);
 
-                    availablePlayer.setGegenspieler(spieler);
-                    spieler.setGegenspieler(availablePlayer);
+                availablePlayer.setGegenspieler(spieler);
+                spieler.setGegenspieler(availablePlayer);
 
-                    availablePlayer.setAvailable(false);
-                    spieler.setAvailable(false);
+                availablePlayer.setAvailable(false);
+                spieler.setAvailable(false);
 
-                    savePlayerChanges(availablePlayer);
-                    meldungService.notifyPlayer(availablePlayer.getName(), aStartenMessage(availablePlayer));
+                savePlayerChanges(availablePlayer);
+                meldungService.notifyPlayer(availablePlayer.getName(), aStartenMessage(availablePlayer));
 
-                    return aStartenMessage(spieler);
-                });
+                return aStartenMessage(spieler);
+            });
     }
 
     private void savePlayerChanges(Spieler spieler) {
@@ -142,10 +147,7 @@ public class SpielDelegate {
     private void log(String name, Spielzug spielzug, int updatedValue) {
 
         log.debug("Spieler {}, value {}, move {}, sum {}. Final value {}",
-                name,
-                spielzug.getValue(),
-                spielzug.getMove(),
-                spielzug.getValue() + spielzug.getMove(),
-                updatedValue);
+            name, spielzug.getValue(), spielzug.getMove(),
+            spielzug.getValue() + spielzug.getMove(), updatedValue);
     }
 }

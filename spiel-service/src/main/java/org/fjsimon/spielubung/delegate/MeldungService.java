@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class MeldungService {
 
-    private static final String UPDATE_QUEUE = "/queue/updates";
+    private static final String NOTIFICATIONS_QUEUE = "/queue/notifications";
     private final SimpMessagingTemplate messagingTemplate;
 
     public void notifyPlayer(String playerName, SpielMessage message) {
-        messagingTemplate.convertAndSendToUser(playerName, UPDATE_QUEUE, message);
+        messagingTemplate.convertAndSendToUser(playerName, NOTIFICATIONS_QUEUE, message);
     }
 }

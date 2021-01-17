@@ -1,0 +1,40 @@
+body {
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+
+.invalid {
+  border: 1px solid #e6522c;
+}
+
+.right {
+  float:right;
+}
+
+.row {
+  margin-bottom: 20px;
+}
+.login {
+    display: inline-block;
+}
+.error {
+    display: none;
+}
+
+.game {
+    display: none;
+}
+
+#header {
+  font-size: 4em;
+  font-weight: bold;
+  word-spacing: -0.1em;
+  text-shadow: 1px 1px black;
+  color: #013220;
+}
+
+#opponentLabel span {
+  color: #013220;
+}
+
+
+@import url(https://unpkg.com/bootstrap@4.1.0/dist/css/bootstrap.min.css)

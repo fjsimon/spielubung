@@ -20,7 +20,7 @@
     </properties>
 
     <modules>
-        <module>spiel-service</module>
         <module>spiel-web</module>
+        <module>spiel-service</module>
     </modules>
 </project>

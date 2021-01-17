@@ -1,6 +1,7 @@
 package org.fjsimon.spielubung.controller;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fjsimon.spielubung.delegate.SpielDelegate;
 import org.fjsimon.spielubung.model.SpielMessage;
 import org.fjsimon.spielubung.model.Spielzug;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 
+@Slf4j
 @AllArgsConstructor
 @Controller
 public class SpielController {
@@ -29,7 +31,9 @@ public class SpielController {
     @SendToUser("/queue/exceptions")
     public String handleExceptions(Throwable throwable) {
 
-        return throwable.getMessage();
+        String message = throwable.getMessage();
+        log.debug(message);
+        return message;
     }
 
     @MessageMapping("/number")

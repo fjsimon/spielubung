@@ -17,11 +17,9 @@ public class SpielMessage {
 
     private String gegenspieler;
 
-    private boolean primaryPlayer;
+    private boolean primary;
 
     private int value;
-
-    private int play;
 
     private boolean winner;
 }
