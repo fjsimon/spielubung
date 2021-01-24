@@ -3,8 +3,21 @@ import { faHome, faSignInAlt, faSignOutAlt} from "@fortawesome/free-solid-svg-ic
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
+import MessageList from "./MessageList.jsx";
+import EndeMessage from "./EndeMessage.jsx";
 
-class GameComponent extends Component {
+import { connect } from "react-redux";
+import { addMessage, clearMessages, gameOver } from "../actions/index";
+
+function mapDispatchToProps(dispatch) {
+  return {
+    addMessage: message => dispatch(addMessage(message)),
+    clearMessages: message => dispatch(clearMessages()),
+    gameOver: payload => dispatch(gameOver(payload))
+  };
+}
+
+class ConnectedGame extends Component {
 
     constructor(props) {
         super(props)
@@ -13,18 +26,15 @@ class GameComponent extends Component {
             username: '',
             gegenspieler: '',
             connected: false,
-            messages: [],
-            spielende: false,
-            winner: '',
             error: false,
             errorMessage: ''
         }
 
         this.client = null;
 
-        this.handleChange = this.handleChange.bind(this)
-        this.connect = this.connect.bind(this)
-        this.disconnect = this.disconnect.bind(this)
+        this.handleChange = this.handleChange.bind(this);
+        this.connect = this.connect.bind(this);
+        this.disconnect = this.disconnect.bind(this);
     }
 
     componentDidMount() {
@@ -43,7 +53,9 @@ class GameComponent extends Component {
 
         if (this.client !== null) {
             this.client.disconnect();
-            this.setState({ connected: false, username: '', messages: [], spielende: false });
+            this.setState({ connected: false, username: ''});
+            this.props.clearMessages();
+            this.props.gameOver( { ende: false } );
         }
     }
 
@@ -87,26 +99,18 @@ class GameComponent extends Component {
                         var addition = self.getNumberToMakeValueDivisibleByThree(value);
                         var message = 'Received ' + value + ', addition ' + addition +
                             ', result = (' + value + '' + (addition < 0 ?'':'+') + addition + ')/3 = ' + (value + addition)/3;
-                        self.setState({messages: [...self.state.messages,  message ]});
-
-                        var message = {
-                            value: value,
-                            move: addition
-                        };
-
-                        stompClient.send('/app/play', {}, JSON.stringify(message));
+                        self.props.addMessage( message );
+                        stompClient.send('/app/play', {}, JSON.stringify({ value: value, move: addition }));
                         break;
                     case 'SPIEL_ENDE':
 
-                        var resultMessage = gameMessage.winner ?
-                            <div className="alert alert-success col-md-12" id="win"> You are the winner </div> :
-                            <div className="alert alert-danger col-md-12" id="lost"> You lost the game </div>;
-
-                        self.setState({ spielende: true , winner: resultMessage });
+                        self.props.gameOver( { ende: true , winner: gameMessage.winner } );
                         break;
                    case 'TRENNEN':
 
-                        self.setState({ gegenspieler: '', messages: [], spielende: false});
+                        self.setState({ gegenspieler: '' });
+                        self.props.clearMessages();
+                        self.props.gameOver( { ende: false } );
                         break;
                }
             });
@@ -165,10 +169,6 @@ class GameComponent extends Component {
         <div id="playAgainst">Playing against {this.state.gegenspieler}</div>
     )
 
-    finalResult = () => (
-        <div>{this.state.winner}</div>
-    )
-
     error = () => (
         <div className="alert alert-warning col-md-12" id="errorMessage"> {this.state.errorMessage} </div>
     )
@@ -181,24 +181,20 @@ class GameComponent extends Component {
                 { this.state.connected && this.state.gegenspieler ? <this.playAgainst /> : null }
 
                 <div className="col-md-15">
-                        <this.usernameInput />
-                        <this.connectButton />
-                        <this.disconnectButton />
+                    <this.usernameInput />
+                    <this.connectButton />
+                    <this.disconnectButton />
                 </div>
 
                 { this.state.error ? <this.error /> : null }
 
-                <div className="col-md-15">
-                    { this.state.messages.map( (item, index) => (<p className="alert alert-info" key={index} >{item}</p>) ) }
-                </div>
-
-                <div className="col-md-15">
-                    { this.state.spielende ? <this.finalResult /> : null }
-                </div>
-
+                <MessageList />
+                <EndeMessage />
             </div>
         )
     }
 }
 
-export default GameComponent
+const GameComponent = connect(null, mapDispatchToProps)(ConnectedGame);
+
+export default GameComponent;
