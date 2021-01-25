@@ -1,10 +1,12 @@
 import React, { Component, useState, useEffect} from 'react';
-import { faHome, faSignInAlt, faSignOutAlt} from "@fortawesome/free-solid-svg-icons";
+import { faHome, faSignInAlt, faSignOutAlt, faRedo } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
+
 import MessageList from "./MessageList.jsx";
 import EndeMessage from "./EndeMessage.jsx";
+import RestartButton from "./RestartButton.jsx";
 
 import { connect } from "react-redux";
 import { addMessage, clearMessages, gameOver } from "../actions/index";
@@ -35,6 +37,7 @@ class ConnectedGame extends Component {
         this.handleChange = this.handleChange.bind(this);
         this.connect = this.connect.bind(this);
         this.disconnect = this.disconnect.bind(this);
+        this.restart = this.restart.bind(this);
     }
 
     componentDidMount() {
@@ -57,6 +60,13 @@ class ConnectedGame extends Component {
             this.props.clearMessages();
             this.props.gameOver( { ende: false } );
         }
+    }
+
+    restart(event) {
+
+        this.props.clearMessages();
+        this.props.gameOver({ende: false});
+        this.client.send('/app/start', {});
     }
 
     connect(event) {
@@ -85,6 +95,8 @@ class ConnectedGame extends Component {
                     case 'STARTEN':
 
                         self.setState({ gegenspieler: gameMessage.gegenspieler });
+                        self.props.clearMessages();
+                        self.props.gameOver({ende: false});
                         if(gameMessage.primary) {
                             var message = {
                                 value: Math.floor(Math.random() * 1000) + 1
@@ -99,7 +111,7 @@ class ConnectedGame extends Component {
                         var addition = self.getNumberToMakeValueDivisibleByThree(value);
                         var message = 'Received ' + value + ', addition ' + addition +
                             ', result = (' + value + '' + (addition < 0 ?'':'+') + addition + ')/3 = ' + (value + addition)/3;
-                        self.props.addMessage( message );
+                        self.props.addMessage(message);
                         stompClient.send('/app/play', {}, JSON.stringify({ value: value, move: addition }));
                         break;
                     case 'SPIEL_ENDE':
@@ -157,7 +169,7 @@ class ConnectedGame extends Component {
             className="btn btn-default"
             disabled={!this.state.connected}
             onClick={this.disconnect}>
-            <FontAwesomeIcon icon={faSignOutAlt} />  Disconnect
+            <FontAwesomeIcon icon={faSignOutAlt} /> Disconnect
         </button>
     )
 
@@ -184,6 +196,7 @@ class ConnectedGame extends Component {
                     <this.usernameInput />
                     <this.connectButton />
                     <this.disconnectButton />
+                    <RestartButton onRestartClicked={this.restart} />
                 </div>
 
                 { this.state.error ? <this.error /> : null }

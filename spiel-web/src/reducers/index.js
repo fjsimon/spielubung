@@ -4,7 +4,8 @@ const initialState = {
     messages: [],
     response: {},
     ende: false,
-    winner: false
+    winner: false,
+    connected: true
 };
 
 function rootReducer(state = initialState, action) {
