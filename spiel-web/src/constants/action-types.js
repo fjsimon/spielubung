@@ -1,4 +1,6 @@
-
 export const ADD_MESSAGE = "ADD_MESSAGE";
 export const CLEAR_MESSAGES = "CLEAR_MESSAGES";
 export const GAME_OVER = "GAME_OVER";
+export const SET_SPIELER = "SET_SPIELER";
+export const SET_GEGENSPIELER = "SET_GEGENSPIELER";
+export const SET_CONNECTED = "SET_CONNECTED";

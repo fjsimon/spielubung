@@ -1,12 +1,17 @@
 import React, { Component } from 'react'
+import { connect } from "react-redux";
 import { Link, withRouter } from 'react-router-dom'
 import { faHome, faPlug} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-class HeaderComponent extends Component {
+const mapStateToProps = (state, props) => {
+    return { connected: state.connected, spieler: state.spieler, gegenspieler: state.gegenspieler};
+};
 
-    render() {
-        return (
+const ConnectedHeaderComponent = ({ connected, spieler, gegenspieler }) => {
+
+    return (
+            <div>
                 <div className="row">
                     <div className="col-md-12">
                         <header id="header">
@@ -14,8 +19,13 @@ class HeaderComponent extends Component {
                         </header>
                     </div>
                 </div>
+                { connected ? <div className="row"><div id="connectedAs">Logged as {spieler}</div></div> : null }
+                { connected && gegenspieler ? <div className="row"><div id="playAgainst">Playing against {gegenspieler}</div></div> : null }
+            </div>
         )
-    }
-}
 
-export default HeaderComponent
+};
+
+const HeaderComponent = connect(mapStateToProps)(ConnectedHeaderComponent);
+
+export default HeaderComponent;

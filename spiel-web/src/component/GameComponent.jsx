@@ -7,15 +7,20 @@ import Stomp from 'stompjs';
 import MessageList from "./MessageList.jsx";
 import EndeMessage from "./EndeMessage.jsx";
 import RestartButton from "./RestartButton.jsx";
+import ConnectButton from "./ConnectButton.jsx";
+import DisconnectButton from "./DisconnectButton.jsx";
 
 import { connect } from "react-redux";
-import { addMessage, clearMessages, gameOver } from "../actions/index";
+import { addMessage, clearMessages, gameOver, setConnected, setSpieler, setGegenspieler} from "../actions/index";
 
 function mapDispatchToProps(dispatch) {
   return {
     addMessage: message => dispatch(addMessage(message)),
     clearMessages: message => dispatch(clearMessages()),
-    gameOver: payload => dispatch(gameOver(payload))
+    gameOver: payload => dispatch(gameOver(payload)),
+    setConnected: payload => dispatch(setConnected(payload)),
+    setSpieler: payload => dispatch(setSpieler(payload)),
+    setGegenspieler: payload => dispatch(setGegenspieler(payload))
   };
 }
 
@@ -26,8 +31,6 @@ class ConnectedGame extends Component {
 
         this.state = {
             username: '',
-            gegenspieler: '',
-            connected: false,
             error: false,
             errorMessage: ''
         }
@@ -50,15 +53,18 @@ class ConnectedGame extends Component {
 
     handleChange(event) {
         this.setState({ username: event.target.value });
+        this.props.setSpieler({ spieler: event.target.value });
     }
 
     disconnect(event) {
 
         if (this.client !== null) {
             this.client.disconnect();
-            this.setState({ connected: false, username: ''});
             this.props.clearMessages();
             this.props.gameOver( { ende: false } );
+            this.props.setConnected( { connected: false } );
+            this.props.setSpieler({ spieler: ''});
+            this.props.setGegenspieler({ gegenspieler: ''});
         }
     }
 
@@ -83,7 +89,7 @@ class ConnectedGame extends Component {
         }, function (frame) {
 
             console.log(frame);
-            self.setState({ connected: true });
+            self.props.setConnected({ connected: true });
             stompClient.send('/app/start', {});
 
             stompClient.subscribe('/user/queue/notifications', function (response) {
@@ -91,12 +97,13 @@ class ConnectedGame extends Component {
 
                 switch (gameMessage.spielStatus) {
                     case 'WARTEN':
+
                         break;
                     case 'STARTEN':
 
-                        self.setState({ gegenspieler: gameMessage.gegenspieler });
+                        self.props.setGegenspieler({ gegenspieler: gameMessage.gegenspieler });
                         self.props.clearMessages();
-                        self.props.gameOver({ende: false});
+                        self.props.gameOver({ ende: false });
                         if(gameMessage.primary) {
                             var message = {
                                 value: Math.floor(Math.random() * 1000) + 1
@@ -120,7 +127,7 @@ class ConnectedGame extends Component {
                         break;
                    case 'TRENNEN':
 
-                        self.setState({ gegenspieler: '' });
+                        self.props.setGegenspieler( { gegenspieler: '' } );
                         self.props.clearMessages();
                         self.props.gameOver( { ende: false } );
                         break;
@@ -155,32 +162,6 @@ class ConnectedGame extends Component {
             placeholder="Your username here..." />
     )
 
-    connectButton = () => (
-        <button id="connect"
-            className="btn btn-default"
-            disabled={this.state.connected}
-            onClick={this.connect}>
-            <FontAwesomeIcon icon={faSignInAlt} /> Connect
-        </button>
-    )
-
-    disconnectButton = () => (
-        <button id="disconnect"
-            className="btn btn-default"
-            disabled={!this.state.connected}
-            onClick={this.disconnect}>
-            <FontAwesomeIcon icon={faSignOutAlt} /> Disconnect
-        </button>
-    )
-
-    connectedAs = () => (
-        <div id="connectedAs">Logged as {this.state.username}</div>
-    )
-
-    playAgainst = () => (
-        <div id="playAgainst">Playing against {this.state.gegenspieler}</div>
-    )
-
     error = () => (
         <div className="alert alert-warning col-md-12" id="errorMessage"> {this.state.errorMessage} </div>
     )
@@ -188,14 +169,10 @@ class ConnectedGame extends Component {
     render() {
         return (
             <div className="login col-md-20">
-
-                { this.state.connected ? <this.connectedAs /> : null }
-                { this.state.connected && this.state.gegenspieler ? <this.playAgainst /> : null }
-
                 <div className="col-md-15">
                     <this.usernameInput />
-                    <this.connectButton />
-                    <this.disconnectButton />
+                    <ConnectButton onConnectClicked={this.connect} />
+                    <DisconnectButton onDisconnectClicked={this.disconnect} />
                     <RestartButton onRestartClicked={this.restart} />
                 </div>
 
