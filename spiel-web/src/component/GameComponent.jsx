@@ -9,6 +9,7 @@ import EndeMessage from "./EndeMessage.jsx";
 import RestartButton from "./RestartButton.jsx";
 import ConnectButton from "./ConnectButton.jsx";
 import DisconnectButton from "./DisconnectButton.jsx";
+import UsernameInput from "./UsernameInput.jsx";
 
 import { connect } from "react-redux";
 import { addMessage, clearMessages, gameOver, setConnected, setSpieler, setGegenspieler} from "../actions/index";
@@ -154,14 +155,6 @@ class ConnectedGame extends Component {
         }
     }
 
-    usernameInput = () => (
-        <input type="text" id="username"
-            value={this.state.username}
-            disabled={this.state.connected}
-            onChange={this.handleChange}
-            placeholder="Your username here..." />
-    )
-
     error = () => (
         <div className="alert alert-warning col-md-12" id="errorMessage"> {this.state.errorMessage} </div>
     )
@@ -170,7 +163,7 @@ class ConnectedGame extends Component {
         return (
             <div className="login col-md-20">
                 <div className="col-md-15">
-                    <this.usernameInput />
+                    <UsernameInput username={this.state.username} onUsernameChanged={this.handleChange} />
                     <ConnectButton onConnectClicked={this.connect} />
                     <DisconnectButton onDisconnectClicked={this.disconnect} />
                     <RestartButton onRestartClicked={this.restart} />
