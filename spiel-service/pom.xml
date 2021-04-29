@@ -155,6 +155,8 @@
 
                 <configuration>
                     <skipTests>false</skipTests>
+                    <mutationThreshold>18</mutationThreshold>
+                    <coverageThreshold>34</coverageThreshold>
                     <targetClasses>
                         <param>org.fjsimon.spielubung*</param>
                     </targetClasses>
