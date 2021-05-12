@@ -91,9 +91,9 @@ public class SpielDelegate {
     private SpielMessage processStartRequestForPlayer(Spieler spieler) {
 
         return ofNullable(spieler.getGegenspieler())
-            .map(this::rematchWithGegenspieler)
-            .orElseGet(() -> pairPlayerWithAvailablePlayer(spieler)
-                .orElseGet(SpielMessageFactory::aWartenMessage));
+                .map(this::rematchWithGegenspieler)
+                .orElseGet(() -> pairPlayerWithAvailablePlayer(spieler)
+                        .orElseGet(SpielMessageFactory::aWartenMessage));
     }
 
     private SpielMessage rematchWithGegenspieler(Spieler spieler) {
