@@ -125,7 +125,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.38</minimum>
+                                            <minimum>0.90</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -162,8 +162,8 @@
 
                 <configuration>
                     <skipTests>false</skipTests>
-                    <mutationThreshold>18</mutationThreshold>
-                    <coverageThreshold>34</coverageThreshold>
+                    <mutationThreshold>98</mutationThreshold>
+                    <coverageThreshold>98</coverageThreshold>
                     <targetClasses>
                         <param>org.fjsimon.spielubung*</param>
                     </targetClasses>

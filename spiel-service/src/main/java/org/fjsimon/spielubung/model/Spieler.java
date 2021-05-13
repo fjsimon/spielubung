@@ -3,7 +3,6 @@ package org.fjsimon.spielubung.model;
 import lombok.*;
 import javax.persistence.*;
 
-@Data
 @Setter
 @Getter
 @Entity(name = "spieler")
